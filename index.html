@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Tracker - Ricardo Morais</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            margin-bottom: 5px;
+        }
+
+        .client-name {
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            color: #999;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #1a1a1a;
+            font-weight: 500;
+            border-bottom: 2px solid #1a1a1a;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .exercise-block {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .exercise-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+
+        .exercise-info {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .sets-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .set-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .set-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            accent-color: #1a1a1a;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .label-with-value {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .current-value {
+            color: #1a1a1a;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #999;
+        }
+
+        .question-text {
+            font-size: 13px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            background: #f9f9f9;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .chart-container {
+            margin-bottom: 40px;
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        @media (max-width: 600px) {
+            .sets-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Training Session</h1>
+        <p class="client-name">Ricardo Morais</p>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+        <button type="button" class="tab active" onclick="showTab('upper')">Upper</button>
+        <button type="button" class="tab" onclick="showTab('lower')">Lower</button>
+        <button type="button" class="tab" onclick="showTab('progress')">Progress</button>
+    </div>
+
+    <!-- UPPER SESSION TAB -->
+    <div id="upper-tab" class="tab-content active">
+        <form id="upper-form">
+            <!-- Pre-Session Emotions -->
+            <div class="section">
+                <div class="section-title">Before Training</div>
+                
+                <div class="form-group">
+                    <label class="label-with-value">
+                        <span>Anticipation</span>
+                        <span class="current-value" id="value-anticipation-upper">—</span>
+                    </label>
+                    <p class="question-text">Are you looking forward to this session?</p>
+                    <input type="range" 
+                           id="anticipation-upper" 
+                           min="0" 
+                           max="5" 
+                           value="0"
+                           oninput="updateValue('anticipation-upper', this.value)">
+                    <div class="scale-labels">
+                        <span>Not at all</span>
+                        <span>Very much</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upper Exercises -->
+            <div class="section">
+                <div class="section-title">Upper Session</div>
+
+                <!-- A. Bounces -->
+                <div class="exercise-block">
+                    <div class="exercise-name">A. Bounces</div>
+                    <div class="exercise-info">10-15 min · ~50-70 pull and push contacts<br>
+                    Pull: Row Bounce, Switch Grip, Pull Up Bounce<br>
+                    Push: Push Up Bounce, Wide to Narrow, Lean Bounce</div>
+                    <div class="set-inputs" style="max-width: 200px;">
+                        <div class="input-group">
+                            <div class="input-label">Contacts</div>
+                            <input type="number" id="upper-bounces" min="0" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- B. Abs -->
+                <div class="exercise-block">
+                    <div class="exercise-name">B. Garhammer Raise on Incline Bench</div>
+                    <div class="exercise-info">1 set · 8+ reps to failure</div>
+                    <div class="set-inputs">
+                        <div class="input-group">
+                            <div class="input-label">Reps</div>
+                            <input type="number" id="garhammer-reps" min="0" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <div class="input-label">kg</div>
+                            <input type="number" id="garhammer-weight" min="0" step="0.5" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- C. Vertical Push/Pull -->
+                <div class="exercise-block">
+                    <div class="exercise-name">C. Vertical Push/Pull Superset</div>
+                    <div class="exercise-info">2 sets · 8-10 reps · 3 min rest</div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 500; font-size: 14px; margin-bottom: 10px;">Overhead Press (40-45kg)</div>
+                        <div class="sets-container">
+                            <div>
+                                <div class="set-label">Set 1</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="ohp-set1-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="ohp-set1-weight" min="0" step="0.5" placeholder="40-45">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="set-label">Set 2</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="ohp-set2-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="ohp-set2-weight" min="0" step="0.5" placeholder="40-45">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-weight: 500; font-size: 14px; margin-bottom: 10px;">Weighted Pull Up, Top Pause (15-20kg)</div>
+                        <div class="sets-container">
+                            <div>
+                                <div class="set-label">Set 1</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="pullup-set1-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="pullup-set1-weight" min="0" step="0.5" placeholder="15-20">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="set-label">Set 2</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="pullup-set2-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="pullup-set2-weight" min="0" step="0.5" placeholder="15-20">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- D. Horizontal Push/Pull -->
+                <div class="exercise-block">
+                    <div class="exercise-name">D. Horizontal Push/Pull Superset</div>
+                    <div class="exercise-info">1-2 sets · 8-10 reps · 3 min rest</div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-weight: 500; font-size: 14px; margin-bottom: 10px;">Ring Push Up (15-20kg)</div>
+                        <div class="sets-container">
+                            <div>
+                                <div class="set-label">Set 1</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="ringpush-set1-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="ringpush-set1-weight" min="0" step="0.5" placeholder="15-20">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="set-label">Set 2</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="ringpush-set2-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="ringpush-set2-weight" min="0" step="0.5" placeholder="15-20">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-weight: 500; font-size: 14px; margin-bottom: 10px;">Yates' Row (40-45kg)</div>
+                        <div class="sets-container">
+                            <div>
+                                <div class="set-label">Set 1</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="yates-set1-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="yates-set1-weight" min="0" step="0.5" placeholder="40-45">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="set-label">Set 2</div>
+                                <div class="set-inputs">
+                                    <div class="input-group">
+                                        <div class="input-label">Reps</div>
+                                        <input type="number" id="yates-set2-reps" min="0" placeholder="0">
+                                    </div>
+                                    <div class="input-group">
+                                        <div class="input-label">kg</div>
+                                        <input type="number" id="yates-set2-weight" min="0" step="0.5" placeholder="40-45">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post-Session Emotions -->
+            <div class="section">
+                <div class="section-title">After Training</div>
+                
+                <div class="form-group">
+                    <label class="label-with-value">
+                        <span>Pride</span>
+                        <span class="current-value" id="value-pride-upper">—</span>
+                    </label>
+                    <p class="question-text">Are you satisfied with the effort you put in?</p>
+                    <input type="range" 
+                           id="pride-upper" 
+                           min="0" 
+                           max="5" 
+                           value="0"
+                           oninput="updateValue('pride-upper', this.value)">
+                    <div class="scale-labels">
+                        <span>Not satisfied</span>
+                        <span>Very satisfied</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-with-value">
+                        <span>Serenity</span>
+                        <span class="current-value" id="value-serenity-upper">—</span>
+                    </label>
+                    <p class="question-text">Did you stay connected to your breathing across the session?</p>
+                    <input type="range" 
+                           id="serenity-upper" 
+                           min="0" 
+                           max="5" 
+                           value="0"
+                           oninput="updateValue('serenity-upper', this.value)">
+                    <div class="scale-labels">
+                        <span>Not calm</span>
+                        <span>Very calm</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-full" id="upper-submit">Save Upper Session</button>
+            <div id="upper-status" class="status-message"></div>
+        </form>
+    </div>
+
+    <!-- LOWER SESSION TAB -->
+    <div id="lower-tab" class="tab-content">
+        <form id="lower-form">
+            <!-- Pre-Session Emotions -->
+            <div class="section">
+                <div class="section-title">Before Training</div>
+                
+                <div class="form-group">
+                    <label class="label-with-value">
+                        <span>Anticipation</span>
+                        <span class="current-value" id="value-anticipation-lower">—</span>
+                    </label>
+                    <p class="question-text">Are you looking forward to this session?</p>
+                    <input type="range" 
+                           id="anticipation-lower" 
+                           min="0" 
+                           max="5" 
+                           value="0"
+                           oninput="updateValue('anticipation-lower', this.value)">
+                    <div class="scale-labels">
+                        <span>Not at all</span>
+                        <span>Very much</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lower Exercises -->
+            <div class="section">
+                <div class="section-title">Lower Session</div>
+
+                <!-- A. Bounces -->
+                <div class="exercise-block">
+                    <div class="exercise-name">A. Bounces</div>
+                    <div class="exercise-info">10-15 min · ~100-150 ground contacts<br>
+                    Free Skips, Line Jumps, Crossed-Extensor Hops</div>
+                    <div class="set-inputs" style="max-width: 200px;">
+                        <div class="input-group">
+                            <div class="input-label">Contacts</div>
+                            <input type="number" id="lower-bounces" min="0" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- B. Zercher Squat -->
+                <div class="exercise-block">
+                    <div class="exercise-name">B. Zercher Heel Elevated Squats</div>
+                    <div class="exercise-info">2 sets · 6-10 reps · 3 min rest · 60-70kg</div>
+                    <div class="sets-container">
+                        <div>
+                            <div class="set-label">Set 1</div>
+                            <div class="set-inputs">
+                                <div class="input-group">
+                                    <div class="input-label">Reps</div>
+                                    <input type="number" id="zsquat-set1-reps" min="0" placeholder="0">
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-label">kg</div>
+                                    <input type="number" id="zsquat-set1-weight" min="0" step="0.5" placeholder="60-70">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="set-label">Set 2</div>
+                            <div class="set-inputs">
+                                <div class="input-group">
+                                    <div class="input-label">Reps</div>
+                                    <input type="number" id="zsquat-set2-reps" min="0" placeholder="0">
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-label">kg</div>
+                                    <input type="number" id="zsquat-set2-weight" min="0" step="0.5" placeholder="60-70">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- C. Jefferson Wave -->
+                <div class="exercise-block">
+                    <div class="exercise-name">C. Zercher Jefferson Wave Curl</div>
+                    <div class="exercise-info">2 sets · 6-10 reps · 3 min rest · 40-50kg</div>
+                    <div class="sets-container">
+                        <div>
+                            <div class="set-label">Set 1</div>
+                            <div class="set-inputs">
+                                <div class="input-group">
+                                    <div class="input-label">Reps</div>
+                                    <input type="number" id="jwave-set1-reps" min="0" placeholder="0">
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-label">kg</div>
+                                    <input type="number" id="jwave-set1-weight" min="0" step="0.5" placeholder="40-50">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="set-label">Set 2</div>
+                            <div class="set-inputs">
+                                <div class="input-group">
+                                    <div class="input-label">Reps</div>
+                                    <input type="number" id="jwave-set2-reps" min="0" placeholder="0">
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-label">kg</div>
+                                    <input type="number" id="jwave-set2-weight" min="0" step="0.5" placeholder="40-50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- D. Landmine -->
+                <div class="exercise-block">
+                    <div class="exercise-name">D. Landmine Deadlift</div>
+                    <div class="exercise-info">1 set · 8+ reps to failure · 15-25kg</div>
+                    <div class="sets-container">
+                        <div>
+                            <div class="set-label">Set 1</div>
+                            <div class="set-inputs">
+                                <div class="input-group">
+                                    <div class="input-label">Reps</div>
+                                    <input type="number" id="landmine-set1-reps" min="0" placeholder="0">
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-label">kg</div>
+                                    <input type="number" id="landmine-set1-weight" min="0" step="0.5" placeholder="15-25">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- E. Horse Stance -->
+                <div class="exercise-block">
+                    <div class="exercise-name">E. Zercher Horse Stance Isometric</div>
+                    <div class="exercise-info">2 sets · 30-45 sec · 2-3 min rest · 30-40kg</div>
+                    <div class="sets-container">
+                        <div>
+                            <div class="set-label">Set 1</div>
+                            <div class="set-inputs">
+                                <div class="input-group">
+                                    <div class="input-label">Seconds</div>
+                                    <input type="number" id="horse-set1-seconds" min="0" placeholder="0">
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-label">kg</div>
+                                    <input type="number" id="horse-set1-weight" min="0" step="0.5" placeholder="30-40">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="set-label">Set 2</div>
+                            <div class="set-inputs">
+                                <div class="input-group">
+                                    <div class="input-label">Seconds</div>
+                                    <input type="number" id="horse-set2-seconds" min="0" placeholder="0">
+                                </div>
+                                <div class="input-group">
+                                    <div class="input-label">kg</div>
+                                    <input type="number" id="horse-set2-weight" min="0" step="0.5" placeholder="30-40">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post-Session Emotions -->
+            <div class="section">
+                <div class="section-title">After Training</div>
+                
+                <div class="form-group">
+                    <label class="label-with-value">
+                        <span>Pride</span>
+                        <span class="current-value" id="value-pride-lower">—</span>
+                    </label>
+                    <p class="question-text">Are you satisfied with the effort you put in?</p>
+                    <input type="range" 
+                           id="pride-lower" 
+                           min="0" 
+                           max="5" 
+                           value="0"
+                           oninput="updateValue('pride-lower', this.value)">
+                    <div class="scale-labels">
+                        <span>Not satisfied</span>
+                        <span>Very satisfied</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label-with-value">
+                        <span>Serenity</span>
+                        <span class="current-value" id="value-serenity-lower">—</span>
+                    </label>
+                    <p class="question-text">Did you stay connected to your breathing across the session?</p>
+                    <input type="range" 
+                           id="serenity-lower" 
+                           min="0" 
+                           max="5" 
+                           value="0"
+                           oninput="updateValue('serenity-lower', this.value)">
+                    <div class="scale-labels">
+                        <span>Not calm</span>
+                        <span>Very calm</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-full" id="lower-submit">Save Lower Session</button>
+            <div id="lower-status" class="status-message"></div>
+        </form>
+    </div>
+
+    <!-- PROGRESS TAB -->
+    <div id="progress-tab" class="tab-content">
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="section-title" style="margin: 0;">Your Progress</div>
+                <button type="button" class="btn-secondary" onclick="loadProgressData()">Refresh Data</button>
+            </div>
+            
+            <div id="loading-message" style="text-align: center; padding: 40px; display: none;">
+                <p>Loading your training data...</p>
+            </div>
+            
+            <div id="no-data-message" style="text-align: center; padding: 40px; display: none;">
+                <p>No training sessions found yet. Log your first session to see progress!</p>
+            </div>
+            
+            <div id="charts-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // Google Sheets Web App URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjRam3K_GFcy7AKBfqgItcrBlz11DvLFqzzW4P-C5ykgVpDxmk0DP4vvS0V-mE0H_EqA/exec';
+
+        let progressCharts = {};
+
+        // Auto-set today's date
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // Update value display for range inputs
+        function updateValue(fieldName, value) {
+            document.getElementById(`value-${fieldName}`).textContent = value;
+        }
+
+        // Initialize range values
+        updateValue('anticipation-upper', 0);
+        updateValue('pride-upper', 0);
+        updateValue('serenity-upper', 0);
+        updateValue('anticipation-lower', 0);
+        updateValue('pride-lower', 0);
+        updateValue('serenity-lower', 0);
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'progress') {
+                loadProgressData();
+            }
+        }
+
+        // Upper form submission
+        document.getElementById('upper-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('upper-submit');
+            const statusMsg = document.getElementById('upper-status');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const data = {
+                client: 'Ricardo Morais',
+                session_type: 'Upper',
+                date: getTodayDate(),
+                anticipation: document.getElementById('anticipation-upper').value,
+                
+                upper_bounces_contacts: document.getElementById('upper-bounces').value || '',
+                garhammer_reps: document.getElementById('garhammer-reps').value || '',
+                garhammer_weight: document.getElementById('garhammer-weight').value || '',
+                
+                ohp_set1_reps: document.getElementById('ohp-set1-reps').value || '',
+                ohp_set1_weight: document.getElementById('ohp-set1-weight').value || '',
+                ohp_set2_reps: document.getElementById('ohp-set2-reps').value || '',
+                ohp_set2_weight: document.getElementById('ohp-set2-weight').value || '',
+                
+                pullup_set1_reps: document.getElementById('pullup-set1-reps').value || '',
+                pullup_set1_weight: document.getElementById('pullup-set1-weight').value || '',
+                pullup_set2_reps: document.getElementById('pullup-set2-reps').value || '',
+                pullup_set2_weight: document.getElementById('pullup-set2-weight').value || '',
+                
+                ringpushup_set1_reps: document.getElementById('ringpush-set1-reps').value || '',
+                ringpushup_set1_weight: document.getElementById('ringpush-set1-weight').value || '',
+                ringpushup_set2_reps: document.getElementById('ringpush-set2-reps').value || '',
+                ringpushup_set2_weight: document.getElementById('ringpush-set2-weight').value || '',
+                
+                yates_set1_reps: document.getElementById('yates-set1-reps').value || '',
+                yates_set1_weight: document.getElementById('yates-set1-weight').value || '',
+                yates_set2_reps: document.getElementById('yates-set2-reps').value || '',
+                yates_set2_weight: document.getElementById('yates-set2-weight').value || '',
+                
+                pride: document.getElementById('pride-upper').value || '0',
+                serenity: document.getElementById('serenity-upper').value || '0',
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Upper form data being sent:', data);
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                showStatus('upper-status', 'Session saved successfully! ✓', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('upper-form').reset();
+                    updateValue('anticipation-upper', 0);
+                    updateValue('pride-upper', 0);
+                    updateValue('serenity-upper', 0);
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('upper-status', 'Error saving session. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Upper Session';
+            }
+        });
+
+        // Lower form submission
+        document.getElementById('lower-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('lower-submit');
+            const statusMsg = document.getElementById('lower-status');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const data = {
+                client: 'Ricardo Morais',
+                session_type: 'Lower',
+                date: getTodayDate(),
+                anticipation: document.getElementById('anticipation-lower').value,
+                
+                lower_bounces_contacts: document.getElementById('lower-bounces').value || '',
+                
+                zerchersquat_set1_reps: document.getElementById('zsquat-set1-reps').value || '',
+                zerchersquat_set1_weight: document.getElementById('zsquat-set1-weight').value || '',
+                zerchersquat_set2_reps: document.getElementById('zsquat-set2-reps').value || '',
+                zerchersquat_set2_weight: document.getElementById('zsquat-set2-weight').value || '',
+                
+                jeffersonwave_set1_reps: document.getElementById('jwave-set1-reps').value || '',
+                jeffersonwave_set1_weight: document.getElementById('jwave-set1-weight').value || '',
+                jeffersonwave_set2_reps: document.getElementById('jwave-set2-reps').value || '',
+                jeffersonwave_set2_weight: document.getElementById('jwave-set2-weight').value || '',
+                
+                landmine_set1_reps: document.getElementById('landmine-set1-reps').value || '',
+                landmine_set1_weight: document.getElementById('landmine-set1-weight').value || '',
+                
+                horsestance_set1_seconds: document.getElementById('horse-set1-seconds').value || '',
+                horsestance_set1_weight: document.getElementById('horse-set1-weight').value || '',
+                horsestance_set2_seconds: document.getElementById('horse-set2-seconds').value || '',
+                horsestance_set2_weight: document.getElementById('horse-set2-weight').value || '',
+                
+                pride: document.getElementById('pride-lower').value || '0',
+                serenity: document.getElementById('serenity-lower').value || '0',
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Lower form data being sent:', data);
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                showStatus('lower-status', 'Session saved successfully! ✓', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('lower-form').reset();
+                    updateValue('anticipation-lower', 0);
+                    updateValue('pride-lower', 0);
+                    updateValue('serenity-lower', 0);
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('lower-status', 'Error saving session. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Lower Session';
+            }
+        });
+
+        function showStatus(elementId, message, type) {
+            const statusMsg = document.getElementById(elementId);
+            statusMsg.textContent = message;
+            statusMsg.className = `status-message status-${type}`;
+            statusMsg.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMsg.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Load progress data from Google Sheets
+        async function loadProgressData() {
+            const loadingMsg = document.getElementById('loading-message');
+            const noDataMsg = document.getElementById('no-data-message');
+            const chartsContainer = document.getElementById('charts-container');
+
+            loadingMsg.style.display = 'block';
+            noDataMsg.style.display = 'none';
+            chartsContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=getData&client=Ricardo Morais');
+                const data = await response.json();
+
+                loadingMsg.style.display = 'none';
+
+                if (!data.sessions || data.sessions.length === 0) {
+                    noDataMsg.style.display = 'block';
+                    return;
+                }
+
+                createProgressCharts(data.sessions);
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                loadingMsg.style.display = 'none';
+                chartsContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Error loading data. Make sure you have internet connection.</p>';
+            }
+        }
+
+        // Create progress charts
+        function createProgressCharts(sessions) {
+            const chartsContainer = document.getElementById('charts-container');
+            
+            Object.values(progressCharts).forEach(chart => chart && chart.destroy());
+            progressCharts = {};
+
+            sessions.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const metricRecency = calculateMetricRecency(sessions);
+
+            const orderedCharts = [
+                { type: 'emotional', name: 'Emotional States', key: 'emotions', recency: metricRecency.emotions },
+                { type: 'simple', name: 'Upper Bounces (contacts)', key: 'upper_bounces', field: 'upper_bounces_contacts', recency: metricRecency.upper_bounces },
+                { type: 'single', name: 'Garhammer Raise', key: 'garhammer', recency: metricRecency.garhammer },
+                { type: 'exercise', name: 'Overhead Press', key: 'ohp', recency: metricRecency.ohp },
+                { type: 'exercise', name: 'Weighted Pull Up', key: 'pullup', recency: metricRecency.pullup },
+                { type: 'exercise', name: 'Ring Push Up', key: 'ringpushup', recency: metricRecency.ringpushup },
+                { type: 'exercise', name: 'Yates\' Row', key: 'yates', recency: metricRecency.yates },
+                { type: 'simple', name: 'Lower Bounces (contacts)', key: 'lower_bounces', field: 'lower_bounces_contacts', recency: metricRecency.lower_bounces },
+                { type: 'exercise', name: 'Zercher Squat', key: 'zerchersquat', recency: metricRecency.zerchersquat },
+                { type: 'exercise', name: 'Jefferson Wave Curl', key: 'jeffersonwave', recency: metricRecency.jeffersonwave },
+                { type: 'single', name: 'Landmine Deadlift', key: 'landmine', recency: metricRecency.landmine },
+                { type: 'isometric', name: 'Horse Stance Isometric', key: 'horsestance', recency: metricRecency.horsestance }
+            ].sort((a, b) => b.recency - a.recency);
+
+            orderedCharts.forEach(chart => {
+                if (chart.type === 'emotional') {
+                    createEmotionalChart(sessions, chartsContainer);
+                } else if (chart.type === 'simple') {
+                    createSimpleChart(sessions, chartsContainer, chart.name, chart.field);
+                } else if (chart.type === 'exercise') {
+                    createExerciseChart(sessions, chartsContainer, chart.name, chart.key);
+                } else if (chart.type === 'single') {
+                    createSingleSetChart(sessions, chartsContainer, chart.name, chart.key);
+                } else if (chart.type === 'isometric') {
+                    createIsometricChart(sessions, chartsContainer, chart.name, chart.key);
+                }
+            });
+        }
+
+        function calculateMetricRecency(sessions) {
+            const recency = {
+                emotions: 0,
+                upper_bounces: 0,
+                garhammer: 0,
+                ohp: 0,
+                pullup: 0,
+                ringpushup: 0,
+                yates: 0,
+                lower_bounces: 0,
+                zerchersquat: 0,
+                jeffersonwave: 0,
+                landmine: 0,
+                horsestance: 0
+            };
+
+            const recentSessions = sessions.slice(-5);
+
+            recentSessions.forEach((session, index) => {
+                const weight = index + 1;
+
+                if (session.anticipation || session.pride || session.serenity) {
+                    recency.emotions += weight;
+                }
+
+                if (session.upper_bounces_contacts) recency.upper_bounces += weight;
+                if (session.lower_bounces_contacts) recency.lower_bounces += weight;
+                if (session.garhammer_reps || session.garhammer_weight) recency.garhammer += weight;
+
+                const exercises = ['ohp', 'pullup', 'ringpushup', 'yates', 'zerchersquat', 'jeffersonwave'];
+                exercises.forEach(ex => {
+                    if (session[`${ex}_set1_reps`] || session[`${ex}_set1_weight`] || 
+                        session[`${ex}_set2_reps`] || session[`${ex}_set2_weight`]) {
+                        recency[ex] += weight;
+                    }
+                });
+
+                if (session.landmine_set1_reps || session.landmine_set1_weight) {
+                    recency.landmine += weight;
+                }
+
+                if (session.horsestance_set1_seconds || session.horsestance_set1_weight ||
+                    session.horsestance_set2_seconds || session.horsestance_set2_weight) {
+                    recency.horsestance += weight;
+                }
+            });
+
+            return recency;
+        }
+
+        // Chart creation functions
+        function createEmotionalChart(sessions, container) {
+            const sessionsWithData = sessions.filter(s => 
+                s.anticipation || s.pride || s.serenity
+            );
+
+            if (sessionsWithData.length === 0) return;
+
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'chart-container';
+            chartDiv.innerHTML = `
+                <div class="chart-title">Emotional States Over Time</div>
+                <canvas id="chart-emotions"></canvas>
+            `;
+            container.appendChild(chartDiv);
+
+            const ctx = document.getElementById('chart-emotions').getContext('2d');
+            
+            progressCharts.emotions = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sessionsWithData.map(s => s.date),
+                    datasets: [
+                        {
+                            label: 'Anticipation',
+                            data: sessionsWithData.map(s => Number(s.anticipation) || 0),
+                            borderColor: '#4A90E2',
+                            backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Pride',
+                            data: sessionsWithData.map(s => Number(s.pride) || 0),
+                            borderColor: '#7B68EE',
+                            backgroundColor: 'rgba(123, 104, 238, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Serenity',
+                            data: sessionsWithData.map(s => Number(s.serenity) || 0),
+                            borderColor: '#50C878',
+                            backgroundColor: 'rgba(80, 200, 120, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        function createSimpleChart(sessions, container, chartName, fieldKey) {
+            const sessionsWithData = sessions.filter(s => s[fieldKey]);
+            if (sessionsWithData.length === 0) return;
+
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'chart-container';
+            chartDiv.innerHTML = `
+                <div class="chart-title">${chartName}</div>
+                <canvas id="chart-${fieldKey}"></canvas>
+            `;
+            container.appendChild(chartDiv);
+
+            const ctx = document.getElementById(`chart-${fieldKey}`).getContext('2d');
+
+            progressCharts[fieldKey] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sessionsWithData.map(s => s.date),
+                    datasets: [{
+                        label: chartName,
+                        data: sessionsWithData.map(s => Number(s[fieldKey]) || 0),
+                        borderColor: '#1a1a1a',
+                        borderWidth: 2,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createExerciseChart(sessions, container, exerciseName, exerciseKey) {
+            const sessionsWithData = sessions.filter(s => 
+                s[`${exerciseKey}_set1_reps`] || s[`${exerciseKey}_set1_weight`] ||
+                s[`${exerciseKey}_set2_reps`] || s[`${exerciseKey}_set2_weight`]
+            );
+
+            if (sessionsWithData.length === 0) return;
+
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'chart-container';
+            chartDiv.innerHTML = `
+                <div class="chart-title">${exerciseName} - Volume</div>
+                <canvas id="chart-${exerciseKey}"></canvas>
+            `;
+            container.appendChild(chartDiv);
+
+            const ctx = document.getElementById(`chart-${exerciseKey}`).getContext('2d');
+
+            const set1Volume = sessionsWithData.map(s => {
+                const reps = Number(s[`${exerciseKey}_set1_reps`]);
+                const weight = Number(s[`${exerciseKey}_set1_weight`]);
+                return (reps && weight) ? reps * weight : null;
+            });
+
+            const set2Volume = sessionsWithData.map(s => {
+                const reps = Number(s[`${exerciseKey}_set2_reps`]);
+                const weight = Number(s[`${exerciseKey}_set2_weight`]);
+                return (reps && weight) ? reps * weight : null;
+            });
+
+            progressCharts[exerciseKey] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sessionsWithData.map(s => s.date),
+                    datasets: [
+                        {
+                            label: 'Set 1 Volume',
+                            data: set1Volume,
+                            borderColor: '#1a1a1a',
+                            borderWidth: 2,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Set 2 Volume',
+                            data: set2Volume,
+                            borderColor: '#666',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createSingleSetChart(sessions, container, exerciseName, exerciseKey) {
+            const sessionsWithData = sessions.filter(s => 
+                s[`${exerciseKey}_set1_reps`] || s[`${exerciseKey}_set1_weight`]
+            );
+
+            if (sessionsWithData.length === 0) return;
+
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'chart-container';
+            chartDiv.innerHTML = `
+                <div class="chart-title">${exerciseName} - Volume</div>
+                <canvas id="chart-${exerciseKey}"></canvas>
+            `;
+            container.appendChild(chartDiv);
+
+            const ctx = document.getElementById(`chart-${exerciseKey}`).getContext('2d');
+
+            const volume = sessionsWithData.map(s => {
+                const reps = Number(s[`${exerciseKey}_set1_reps`]);
+                const weight = Number(s[`${exerciseKey}_set1_weight`]);
+                return (reps && weight) ? reps * weight : null;
+            });
+
+            progressCharts[exerciseKey] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sessionsWithData.map(s => s.date),
+                    datasets: [{
+                        label: 'Volume',
+                        data: volume,
+                        borderColor: '#1a1a1a',
+                        borderWidth: 2,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createIsometricChart(sessions, container, exerciseName, exerciseKey) {
+            const sessionsWithData = sessions.filter(s => 
+                s[`${exerciseKey}_set1_seconds`] || s[`${exerciseKey}_set1_weight`] ||
+                s[`${exerciseKey}_set2_seconds`] || s[`${exerciseKey}_set2_weight`]
+            );
+
+            if (sessionsWithData.length === 0) return;
+
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'chart-container';
+            chartDiv.innerHTML = `
+                <div class="chart-title">${exerciseName}</div>
+                <canvas id="chart-${exerciseKey}"></canvas>
+            `;
+            container.appendChild(chartDiv);
+
+            const ctx = document.getElementById(`chart-${exerciseKey}`).getContext('2d');
+
+            progressCharts[exerciseKey] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sessionsWithData.map(s => s.date),
+                    datasets: [
+                        {
+                            label: 'Set 1 Time (sec)',
+                            data: sessionsWithData.map(s => Number(s[`${exerciseKey}_set1_seconds`]) || null),
+                            borderColor: '#1a1a1a',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Set 2 Time (sec)',
+                            data: sessionsWithData.map(s => Number(s[`${exerciseKey}_set2_seconds`]) || null),
+                            borderColor: '#666',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Load (kg)',
+                            data: sessionsWithData.map(s => Number(s[`${exerciseKey}_set1_weight`]) || Number(s[`${exerciseKey}_set2_weight`]) || null),
+                            borderColor: '#4A90E2',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', beginAtZero: true },
+                        y1: { type: 'linear', display: true, position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
